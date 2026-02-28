@@ -46,6 +46,12 @@ class JW_Event_Manager_Init {
             require_once JW_EVENT_MANAGER_PATH . 'includes/class-jw-event-cli.php';
             WP_CLI::add_command( 'jw_event', 'JW_Event_CLI' );
         }
+
+        // Load Admin specific classes.
+        if ( is_admin() ) {
+            require_once JW_EVENT_MANAGER_PATH . 'admin/class-jw-event-meta-boxes.php';
+            new JW_Event_Meta_Boxes();
+        }
     }
 
     /**
