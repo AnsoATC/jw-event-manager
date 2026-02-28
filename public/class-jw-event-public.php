@@ -55,12 +55,10 @@ class JW_Event_Public {
             'post_status'    => 'publish',
         );
 
-        // Filter by keyword.
         if ( ! empty( $search_query ) ) {
             $args['s'] = $search_query;
         }
 
-        // Filter by taxonomy (Event Type).
         if ( ! empty( $event_type ) ) {
             $args['tax_query'] = array(
                 array(
@@ -71,7 +69,6 @@ class JW_Event_Public {
             );
         }
 
-        // Filter by date range using Meta Query.
         if ( ! empty( $start_date ) || ! empty( $end_date ) ) {
             $args['meta_query'] = array();
             
@@ -100,54 +97,113 @@ class JW_Event_Public {
         }
 
         $query = new WP_Query( $args );
+        $terms = get_terms( array( 'taxonomy' => 'jw_event_type', 'hide_empty' => false ) );
         
         ob_start();
-
-        // 3. Render the Search and Filter Form.
-        $terms = get_terms( array( 'taxonomy' => 'jw_event_type', 'hide_empty' => false ) );
         ?>
-        <form method="GET" action="" class="jw-events-filter-form" style="background: #f1f1f1; padding: 20px; margin-bottom: 20px; border-radius: 5px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-            <input type="text" name="jw_search" placeholder="<?php esc_attr_e( 'Search events...', 'jw-event-manager' ); ?>" value="<?php echo esc_attr( $search_query ); ?>" style="flex: 1; min-width: 150px; padding: 8px;">
+        
+        <style>
+            .jw-events-wrapper { font-family: inherit; margin: 20px 0; }
+            .jw-filter-form { background: #f8f9fa; padding: 25px; border-radius: 8px; border: 1px solid #e2e4e7; margin-bottom: 30px; display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+            .jw-filter-group { display: flex; flex-direction: column; flex: 1; min-width: 160px; }
+            .jw-filter-group label { font-size: 0.9em; font-weight: 600; margin-bottom: 8px; color: #1d2327; }
+            .jw-filter-group input, .jw-filter-group select { padding: 10px 12px; border: 1px solid #8c8f94; border-radius: 4px; font-size: 14px; background: #fff; box-shadow: 0 0 0 transparent; transition: border-color 0.2s; }
+            .jw-filter-group input:focus, .jw-filter-group select:focus { border-color: #2271b1; outline: none; box-shadow: 0 0 0 1px #2271b1; }
+            .jw-filter-actions { display: flex; gap: 10px; align-items: flex-end; padding-bottom: 1px; }
+            .jw-btn { padding: 11px 20px; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; font-weight: 600; transition: all 0.2s; text-decoration: none; text-align: center; }
+            .jw-btn-primary { background: #2271b1; color: #fff; }
+            .jw-btn-primary:hover { background: #135e96; color: #fff; }
+            .jw-btn-secondary { background: #f0f0f1; color: #d63638; border: 1px solid #d63638; }
+            .jw-btn-secondary:hover { background: #d63638; color: #fff; }
             
-            <select name="jw_type" style="flex: 1; min-width: 150px; padding: 8px;">
-                <option value=""><?php esc_html_e( 'All Types', 'jw-event-manager' ); ?></option>
-                <?php if ( ! is_wp_error( $terms ) ) : ?>
-                    <?php foreach ( $terms as $term ) : ?>
-                        <option value="<?php echo esc_attr( $term->slug ); ?>" <?php selected( $event_type, $term->slug ); ?>><?php echo esc_html( $term->name ); ?></option>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </select>
-
-            <input type="date" name="jw_start_date" value="<?php echo esc_attr( $start_date ); ?>" style="flex: 1; min-width: 130px; padding: 8px;" title="<?php esc_attr_e( 'Start Date', 'jw-event-manager' ); ?>">
-            <input type="date" name="jw_end_date" value="<?php echo esc_attr( $end_date ); ?>" style="flex: 1; min-width: 130px; padding: 8px;" title="<?php esc_attr_e( 'End Date', 'jw-event-manager' ); ?>">
+            .jw-event-card { background: #fff; border: 1px solid #c3c4c7; border-radius: 8px; padding: 20px; margin-bottom: 20px; transition: transform 0.2s, box-shadow 0.2s; }
+            .jw-event-card:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.08); border-color: #a7aaad; }
+            .jw-event-title { margin-top: 0; margin-bottom: 15px; font-size: 1.5em; }
+            .jw-event-title a { color: #1d2327; text-decoration: none; }
+            .jw-event-title a:hover { color: #2271b1; text-decoration: underline; }
             
-            <button type="submit" style="background: #0073aa; color: #fff; border: none; padding: 10px 20px; cursor: pointer; border-radius: 3px;"><?php esc_html_e( 'Filter', 'jw-event-manager' ); ?></button>
-            <a href="<?php echo esc_url( strtok( $_SERVER["REQUEST_URI"], '?' ) ); ?>" style="padding: 10px; text-decoration: none; color: #d63638;"><?php esc_html_e( 'Reset', 'jw-event-manager' ); ?></a>
-        </form>
-        <?php
+            .jw-event-meta-container { display: flex; flex-wrap: wrap; gap: 10px; }
+            .jw-meta-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0f0f1; padding: 6px 12px; border-radius: 20px; font-size: 0.85em; color: #3c434a; font-weight: 500; }
+            .jw-no-results { background: #fff8e5; border-left: 4px solid #f56e28; padding: 15px; font-weight: 500; }
+        </style>
 
-        // 4. Render the Event Results.
-        if ( $query->have_posts() ) {
-            echo '<div class="jw-events-list">';
-            while ( $query->have_posts() ) {
-                $query->the_post();
-                $date     = get_post_meta( get_the_ID(), '_jw_event_date', true );
-                $location = get_post_meta( get_the_ID(), '_jw_event_location', true );
-                $types    = get_the_term_list( get_the_ID(), 'jw_event_type', '', ', ' );
+        <div class="jw-events-wrapper">
+            <form method="GET" action="" class="jw-filter-form">
                 
-                echo '<div class="jw-event-item" style="border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 5px; background: #fff;">';
-                echo '<h3 style="margin-top: 0;"><a href="' . esc_url( get_permalink() ) . '">' . esc_html( get_the_title() ) . '</a></h3>';
-                if ( $date ) echo '<p style="margin: 5px 0;">📅 <strong>' . esc_html__( 'Date:', 'jw-event-manager' ) . '</strong> ' . esc_html( date_i18n( get_option( 'date_format' ), strtotime( $date ) ) ) . '</p>';
-                if ( $location ) echo '<p style="margin: 5px 0;">📍 <strong>' . esc_html__( 'Location:', 'jw-event-manager' ) . '</strong> ' . esc_html( $location ) . '</p>';
-                if ( $types && ! is_wp_error( $types ) ) echo '<p style="margin: 5px 0;">🏷️ <strong>' . esc_html__( 'Type:', 'jw-event-manager' ) . '</strong> ' . wp_kses_post( $types ) . '</p>';
-                echo '</div>';
-            }
-            echo '</div>';
-            wp_reset_postdata();
-        } else {
-            echo '<p>' . esc_html__( 'No events match your criteria.', 'jw-event-manager' ) . '</p>';
-        }
+                <div class="jw-filter-group">
+                    <label for="jw_search"><?php esc_html_e( 'Keyword Search', 'jw-event-manager' ); ?></label>
+                    <input type="text" id="jw_search" name="jw_search" placeholder="<?php esc_attr_e( 'e.g., Conference...', 'jw-event-manager' ); ?>" value="<?php echo esc_attr( $search_query ); ?>">
+                </div>
+                
+                <div class="jw-filter-group">
+                    <label for="jw_type"><?php esc_html_e( 'Event Type', 'jw-event-manager' ); ?></label>
+                    <select id="jw_type" name="jw_type">
+                        <option value=""><?php esc_html_e( '— All Types —', 'jw-event-manager' ); ?></option>
+                        <?php if ( ! is_wp_error( $terms ) ) : ?>
+                            <?php foreach ( $terms as $term ) : ?>
+                                <option value="<?php echo esc_attr( $term->slug ); ?>" <?php selected( $event_type, $term->slug ); ?>><?php echo esc_html( $term->name ); ?></option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
+                </div>
 
+                <div class="jw-filter-group">
+                    <label for="jw_start_date"><?php esc_html_e( 'Start Date', 'jw-event-manager' ); ?></label>
+                    <input type="date" id="jw_start_date" name="jw_start_date" value="<?php echo esc_attr( $start_date ); ?>">
+                </div>
+
+                <div class="jw-filter-group">
+                    <label for="jw_end_date"><?php esc_html_e( 'End Date', 'jw-event-manager' ); ?></label>
+                    <input type="date" id="jw_end_date" name="jw_end_date" value="<?php echo esc_attr( $end_date ); ?>">
+                </div>
+                
+                <div class="jw-filter-actions">
+                    <button type="submit" class="jw-btn jw-btn-primary"><?php esc_html_e( 'Filter Events', 'jw-event-manager' ); ?></button>
+                    <a href="<?php echo esc_url( strtok( $_SERVER["REQUEST_URI"], '?' ) ); ?>" class="jw-btn jw-btn-secondary"><?php esc_html_e( 'Reset', 'jw-event-manager' ); ?></a>
+                </div>
+            </form>
+
+            <div class="jw-events-list">
+                <?php
+                if ( $query->have_posts() ) {
+                    while ( $query->have_posts() ) {
+                        $query->the_post();
+                        $date     = get_post_meta( get_the_ID(), '_jw_event_date', true );
+                        $location = get_post_meta( get_the_ID(), '_jw_event_location', true );
+                        $types    = get_the_term_list( get_the_ID(), 'jw_event_type', '', ', ' );
+                        ?>
+                        
+                        <div class="jw-event-card">
+                            <h3 class="jw-event-title">
+                                <a href="<?php echo esc_url( get_permalink() ); ?>"><?php echo esc_html( get_the_title() ); ?></a>
+                            </h3>
+                            
+                            <div class="jw-event-meta-container">
+                                <?php if ( $date ) : ?>
+                                    <span class="jw-meta-badge">📅 <?php echo esc_html( date_i18n( get_option( 'date_format' ), strtotime( $date ) ) ); ?></span>
+                                <?php endif; ?>
+                                
+                                <?php if ( $location ) : ?>
+                                    <span class="jw-meta-badge">📍 <?php echo esc_html( $location ); ?></span>
+                                <?php endif; ?>
+                                
+                                <?php if ( $types && ! is_wp_error( $types ) ) : ?>
+                                    <span class="jw-meta-badge">🏷️ <?php echo wp_kses_post( $types ); ?></span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <?php
+                    }
+                    wp_reset_postdata();
+                } else {
+                    echo '<div class="jw-no-results">' . esc_html__( 'No events match your current filters. Try adjusting your search criteria.', 'jw-event-manager' ) . '</div>';
+                }
+                ?>
+            </div>
+        </div>
+
+        <?php
         return ob_get_clean();
     }
 }
