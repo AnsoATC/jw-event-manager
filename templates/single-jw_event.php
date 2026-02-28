@@ -10,6 +10,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 get_header(); ?>
 
+<style>
+    .jw-single-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; padding: 20px 0; border-top: 1px solid #e2e4e7; border-bottom: 1px solid #e2e4e7; }
+    .jw-meta-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0f0f1; padding: 8px 14px; border-radius: 20px; font-size: 0.9em; color: #3c434a; font-weight: 500; }
+    .jw-rsvp-wrapper { margin-top: 50px; padding: 35px; background: #f8f9fa; border: 1px solid #e2e4e7; border-radius: 8px; }
+    .jw-rsvp-title { margin-top: 0; font-size: 1.6em; margin-bottom: 25px; color: #1d2327; }
+    .jw-form-group { margin-bottom: 20px; }
+    .jw-form-group label { display: block; font-weight: 600; margin-bottom: 8px; color: #1d2327; }
+    .jw-form-group input { width: 100%; padding: 12px; border: 1px solid #8c8f94; border-radius: 4px; max-width: 450px; font-size: 16px; }
+    .jw-form-group input:focus { border-color: #2271b1; outline: none; box-shadow: 0 0 0 1px #2271b1; }
+    .jw-submit-btn { background: #2271b1; color: #fff; border: none; padding: 14px 28px; font-size: 16px; font-weight: 600; border-radius: 4px; cursor: pointer; transition: background 0.2s; }
+    .jw-submit-btn:hover { background: #135e96; }
+</style>
+
 <div id="primary" class="content-area" style="max-width: 800px; margin: 40px auto; padding: 20px;">
     <main id="main" class="site-main">
 
@@ -24,57 +37,54 @@ get_header(); ?>
 
             <article id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
                 <header class="entry-header">
-                    <?php the_title( '<h1 class="entry-title" style="font-size: 2.5em; margin-bottom: 10px;">', '</h1>' ); ?>
+                    <?php the_title( '<h1 class="entry-title" style="font-size: 3em; margin-bottom: 15px; color: #1d2327;">', '</h1>' ); ?>
                     
-                    <div class="event-meta" style="background: #f9f9f9; padding: 15px; border-left: 4px solid #0073aa; margin-bottom: 20px;">
+                    <div class="jw-single-meta">
                         <?php if ( $event_date ) : ?>
-                            <p style="margin: 0 0 5px;">📅 <strong><?php esc_html_e( 'Date:', 'jw-event-manager' ); ?></strong> <?php echo esc_html( date_i18n( get_option( 'date_format' ), strtotime( $event_date ) ) ); ?></p>
+                            <span class="jw-meta-badge">📅 <?php echo esc_html( date_i18n( get_option( 'date_format' ), strtotime( $event_date ) ) ); ?></span>
                         <?php endif; ?>
                         
                         <?php if ( $event_location ) : ?>
-                            <p style="margin: 0 0 5px;">📍 <strong><?php esc_html_e( 'Location:', 'jw-event-manager' ); ?></strong> <?php echo esc_html( $event_location ); ?></p>
+                            <span class="jw-meta-badge">📍 <?php echo esc_html( $event_location ); ?></span>
                         <?php endif; ?>
 
                         <?php if ( $event_types && ! is_wp_error( $event_types ) ) : ?>
-                            <p style="margin: 0;">🏷️ <strong><?php esc_html_e( 'Type:', 'jw-event-manager' ); ?></strong> <?php echo wp_kses_post( $event_types ); ?></p>
+                            <span class="jw-meta-badge">🏷️ <?php echo wp_kses_post( $event_types ); ?></span>
                         <?php endif; ?>
                     </div>
                 </header>
 
-                <div class="entry-content">
-                    <?php
-                    // Display the main content (description)
-                    the_content();
-                    ?>
+                <div class="entry-content" style="font-size: 1.15em; line-height: 1.7; color: #3c434a;">
+                    <?php the_content(); ?>
                 </div>
                 
-                <div class="jw-rsvp-section" style="margin-top: 40px; padding: 25px; background: #ffffff; border: 1px solid #e2e4e7; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                    <h3 style="margin-top: 0; font-size: 1.5em; border-bottom: 2px solid #0073aa; padding-bottom: 10px; display: inline-block;">
+                <div class="jw-rsvp-wrapper">
+                    <h3 class="jw-rsvp-title">
                         <?php esc_html_e( 'RSVP for this Event', 'jw-event-manager' ); ?>
                     </h3>
                     
                     <?php if ( isset( $_GET['rsvp'] ) && 'success' === $_GET['rsvp'] ) : ?>
-                        <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin-bottom: 20px; font-weight: bold;">
+                        <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin-bottom: 25px; font-weight: bold; border: 1px solid #c3e6cb;">
                             <?php esc_html_e( 'Thank you! Your RSVP has been successfully recorded. A confirmation email has been sent.', 'jw-event-manager' ); ?>
                         </div>
                     <?php endif; ?>
 
-                    <form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="POST" style="display: flex; flex-direction: column; gap: 15px; max-width: 400px;">
+                    <form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="POST">
                         <input type="hidden" name="action" value="jw_submit_rsvp">
                         <input type="hidden" name="event_id" value="<?php echo esc_attr( get_the_ID() ); ?>">
                         <?php wp_nonce_field( 'jw_submit_rsvp_action', 'jw_rsvp_nonce' ); ?>
 
-                        <div>
-                            <label for="rsvp_name" style="display: block; font-weight: bold; margin-bottom: 5px;"><?php esc_html_e( 'Full Name *', 'jw-event-manager' ); ?></label>
-                            <input type="text" id="rsvp_name" name="rsvp_name" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                        <div class="jw-form-group">
+                            <label for="rsvp_name"><?php esc_html_e( 'Full Name *', 'jw-event-manager' ); ?></label>
+                            <input type="text" id="rsvp_name" name="rsvp_name" required>
                         </div>
 
-                        <div>
-                            <label for="rsvp_email" style="display: block; font-weight: bold; margin-bottom: 5px;"><?php esc_html_e( 'Email Address *', 'jw-event-manager' ); ?></label>
-                            <input type="email" id="rsvp_email" name="rsvp_email" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                        <div class="jw-form-group">
+                            <label for="rsvp_email"><?php esc_html_e( 'Email Address *', 'jw-event-manager' ); ?></label>
+                            <input type="email" id="rsvp_email" name="rsvp_email" required>
                         </div>
 
-                        <button type="submit" style="background: #0073aa; color: #fff; border: none; padding: 12px 20px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; transition: background 0.3s;">
+                        <button type="submit" class="jw-submit-btn">
                             <?php esc_html_e( 'Confirm Attendance', 'jw-event-manager' ); ?>
                         </button>
                     </form>
