@@ -1,17 +1,21 @@
 <?php
-// Sécurité : Empêcher l'accès direct au fichier
+// Prevent direct access.
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
 /**
- * Classe gérant la création du Custom Post Type et de la Taxonomie
+ * Class handling the registration of the Event Custom Post Type and Taxonomy.
  */
 class JW_Event_CPT {
 
+    /**
+     * Registers the "Event" post type and the "Event Type" taxonomy.
+     * Hooked into 'init'.
+     */
     public function register_cpt_and_taxonomies() {
         
-        // 1. Enregistrer la Taxonomie "Event Type" (Catégories d'événements)
+        // 1. Register Taxonomy: Event Type.
         $tax_labels = array(
             'name'              => __( 'Event Types', 'jw-event-manager' ),
             'singular_name'     => __( 'Event Type', 'jw-event-manager' ),
@@ -25,18 +29,18 @@ class JW_Event_CPT {
         );
 
         $tax_args = array(
-            'hierarchical'      => true, // Comportement similaire aux catégories natives
+            'hierarchical'      => true,
             'labels'            => $tax_labels,
             'show_ui'           => true,
             'show_admin_column' => true,
             'query_var'         => true,
-            'show_in_rest'      => true, // Exigence : Obligatoire pour la REST API et l'éditeur de blocs
+            'show_in_rest'      => true, // Required for Block Editor and REST API integration.
             'rewrite'           => array( 'slug' => 'event-type' ),
         );
 
         register_taxonomy( 'jw_event_type', array( 'jw_event' ), $tax_args );
 
-        // 2. Enregistrer le Custom Post Type "Event"
+        // 2. Register Custom Post Type: Event.
         $cpt_labels = array(
             'name'                  => __( 'Events', 'jw-event-manager' ),
             'singular_name'         => __( 'Event', 'jw-event-manager' ),
@@ -60,12 +64,12 @@ class JW_Event_CPT {
             'query_var'          => true,
             'rewrite'            => array( 'slug' => 'events' ),
             'capability_type'    => 'post',
-            'has_archive'        => true, // Permet d'avoir une page listant tous les événements (archive)
+            'has_archive'        => true,
             'hierarchical'       => false,
-            'menu_position'      => 5, // Juste en dessous du menu "Articles"
-            'menu_icon'          => 'dashicons-calendar-alt', // Icône native de calendrier WordPress
+            'menu_position'      => 5,
+            'menu_icon'          => 'dashicons-calendar-alt',
             'supports'           => array( 'title', 'editor', 'thumbnail', 'excerpt' ),
-            'show_in_rest'       => true, // Exigence : Expose le CPT via la REST API
+            'show_in_rest'       => true, // Exposes the CPT to the WordPress REST API.
         );
 
         register_post_type( 'jw_event', $cpt_args );
