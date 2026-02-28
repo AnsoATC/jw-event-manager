@@ -35,19 +35,26 @@ class JW_Event_Manager_Init {
      * Load required classes and initialize hooks.
      */
     private function load_dependencies() {
-        // Load the Custom Post Type class.
+        // 1. Load Custom Post Type
         require_once JW_EVENT_MANAGER_PATH . 'includes/class-jw-event-cpt.php';
-        
         $cpt = new JW_Event_CPT();
         add_action( 'init', array( $cpt, 'register_cpt_and_taxonomies' ) );
 
-        // Load WP-CLI commands only if running in a CLI environment.
+        // 2. Load API Integration
+        require_once JW_EVENT_MANAGER_PATH . 'includes/class-jw-event-api.php';
+        new JW_Event_API();
+
+        // 3. Load Communications (RSVP & Emails)
+        require_once JW_EVENT_MANAGER_PATH . 'includes/class-jw-event-communications.php';
+        new JW_Event_Communications();
+
+        // 4. Load WP-CLI commands only if running in a CLI environment.
         if ( defined( 'WP_CLI' ) && WP_CLI ) {
             require_once JW_EVENT_MANAGER_PATH . 'includes/class-jw-event-cli.php';
             WP_CLI::add_command( 'jw_event', 'JW_Event_CLI' );
         }
 
-        // Load Admin specific classes.
+        // 5. Load Admin specific classes.
         if ( is_admin() ) {
             require_once JW_EVENT_MANAGER_PATH . 'admin/class-jw-event-meta-boxes.php';
             new JW_Event_Meta_Boxes();
@@ -56,7 +63,7 @@ class JW_Event_Manager_Init {
             new JW_Event_Admin_List();
         }
 
-        // Load Public specific classes (Front-end).
+        // 6. Load Public specific classes (Front-end).
         require_once JW_EVENT_MANAGER_PATH . 'public/class-jw-event-public.php';
         new JW_Event_Public();
     }

@@ -48,7 +48,39 @@ get_header(); ?>
                     ?>
                 </div>
                 
-                </article>
+                <div class="jw-rsvp-section" style="margin-top: 40px; padding: 25px; background: #ffffff; border: 1px solid #e2e4e7; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                    <h3 style="margin-top: 0; font-size: 1.5em; border-bottom: 2px solid #0073aa; padding-bottom: 10px; display: inline-block;">
+                        <?php esc_html_e( 'RSVP for this Event', 'jw-event-manager' ); ?>
+                    </h3>
+                    
+                    <?php if ( isset( $_GET['rsvp'] ) && 'success' === $_GET['rsvp'] ) : ?>
+                        <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin-bottom: 20px; font-weight: bold;">
+                            <?php esc_html_e( 'Thank you! Your RSVP has been successfully recorded. A confirmation email has been sent.', 'jw-event-manager' ); ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="POST" style="display: flex; flex-direction: column; gap: 15px; max-width: 400px;">
+                        <input type="hidden" name="action" value="jw_submit_rsvp">
+                        <input type="hidden" name="event_id" value="<?php echo esc_attr( get_the_ID() ); ?>">
+                        <?php wp_nonce_field( 'jw_submit_rsvp_action', 'jw_rsvp_nonce' ); ?>
+
+                        <div>
+                            <label for="rsvp_name" style="display: block; font-weight: bold; margin-bottom: 5px;"><?php esc_html_e( 'Full Name *', 'jw-event-manager' ); ?></label>
+                            <input type="text" id="rsvp_name" name="rsvp_name" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                        </div>
+
+                        <div>
+                            <label for="rsvp_email" style="display: block; font-weight: bold; margin-bottom: 5px;"><?php esc_html_e( 'Email Address *', 'jw-event-manager' ); ?></label>
+                            <input type="email" id="rsvp_email" name="rsvp_email" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                        </div>
+
+                        <button type="submit" style="background: #0073aa; color: #fff; border: none; padding: 12px 20px; font-size: 16px; font-weight: bold; border-radius: 4px; cursor: pointer; transition: background 0.3s;">
+                            <?php esc_html_e( 'Confirm Attendance', 'jw-event-manager' ); ?>
+                        </button>
+                    </form>
+                </div>
+
+            </article>
 
         <?php endwhile; ?>
 
