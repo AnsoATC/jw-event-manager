@@ -52,6 +52,10 @@ class JW_Event_Manager_Init {
             require_once JW_EVENT_MANAGER_PATH . 'admin/class-jw-event-meta-boxes.php';
             new JW_Event_Meta_Boxes();
         }
+
+        // Load Public specific classes (Front-end).
+        require_once JW_EVENT_MANAGER_PATH . 'public/class-jw-event-public.php';
+        new JW_Event_Public();
     }
 
     /**
