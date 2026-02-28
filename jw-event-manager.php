@@ -51,6 +51,9 @@ class JW_Event_Manager_Init {
         if ( is_admin() ) {
             require_once JW_EVENT_MANAGER_PATH . 'admin/class-jw-event-meta-boxes.php';
             new JW_Event_Meta_Boxes();
+
+            require_once JW_EVENT_MANAGER_PATH . 'admin/class-jw-event-admin-list.php';
+            new JW_Event_Admin_List();
         }
 
         // Load Public specific classes (Front-end).
